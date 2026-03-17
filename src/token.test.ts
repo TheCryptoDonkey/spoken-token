@@ -214,6 +214,16 @@ describe('deriveDirectionalPair equivalence', () => {
     expect(pair.caller).toBe('receive')
     expect(pair.agent).toBe('coyote')
   })
+
+  // Document the design equivalence: directional pair for namespace=X, role=Y
+  // produces the same token as identity-bound derivation with context=X, identity=Y.
+  // Both compute HMAC(secret, utf8("X\0Y") || counter_be32). This is by design —
+  // both require the same secret, so equivalence does not weaken security.
+  it('directional pair token equals identity-bound token (design equivalence)', () => {
+    const pair = deriveDirectionalPair(SECRET_1, 'ns', ['roleA', 'roleB'], 0)
+    const identityToken = deriveToken(SECRET_1, 'ns', 0, undefined, 'roleA')
+    expect(pair.roleA).toBe(identityToken)
+  })
 })
 
 // ─── deriveDirectionalPair ───────────────────────────────────────────────────

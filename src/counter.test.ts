@@ -113,6 +113,10 @@ describe('getCounter input validation', () => {
   it('accepts valid positive inputs', () => {
     expect(getCounter(1_209_600, 604_800)).toBe(2)
   })
+
+  it('throws when counter would exceed uint32 (very small interval)', () => {
+    expect(() => getCounter(1e15, 0.001)).toThrow(RangeError)
+  })
 })
 
 describe('counterFromEventId', () => {
@@ -138,6 +142,14 @@ describe('counterFromEventId', () => {
   // Golden test — SHA-256('hello') first 4 bytes = 0x2cf24dba → 754077114
   it('produces known output for known input (golden test)', () => {
     expect(counterFromEventId('hello')).toBe(754077114)
+  })
+
+  // Golden test with high first byte (>= 0x80) to exercise sign-extension path
+  // SHA-256('abc') first 4 bytes = 0xba7816bf → 3128432319
+  it('handles high first byte correctly (sign-extension golden test)', () => {
+    const counter = counterFromEventId('abc')
+    expect(counter).toBe(3128432319)
+    expect(counter).toBeGreaterThan(0x7FFFFFFF) // confirms high bit set
   })
 
   it('throws on empty string', () => {

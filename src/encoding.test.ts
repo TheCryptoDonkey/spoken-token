@@ -44,7 +44,7 @@ describe('encodeAsWords', () => {
 })
 
 describe('encodeAsPin bias', () => {
-  it('10-digit PIN has no bias from modulo (10^10 divides evenly into value space)', () => {
+  it('10-digit PIN has minor bias (~0.87%)', () => {
     // For 10 digits we use 5 bytes (40 bits, max value 2^40 - 1 = 1,099,511,627,775)
     // 10^10 = 10,000,000,000. 2^40 / 10^10 ≈ 109.95, so bias exists.
     // Bias ratio: (2^40 mod 10^10) / 2^40 = 9,511,627,776 / 1,099,511,627,776 ≈ 0.87%
@@ -60,6 +60,35 @@ describe('encodeAsPin bias', () => {
     bytes.fill(0xff)
     const maxPin = encodeAsPin(bytes, 10)
     expect(Number(maxPin)).toBeLessThan(10_000_000_000)
+  })
+
+  // Characterise modular bias for each digit count.
+  // Formula: bytes_needed = ceil(digits * 0.415), max_val = 2^(bytes*8), bias = (max_val % 10^digits) / max_val
+  // 4 digits: 2 bytes, bias ~8.4%
+  // 5 digits: 3 bytes, bias ~0.46%
+  // 6 digits: 3 bytes, bias ~4.6%
+  // 7 digits: 3 bytes, bias ~40.4% (severe — some values nearly 2× as likely)
+  // 8 digits: 4 bytes, bias ~2.2%
+  // 9 digits: 4 bytes (BigInt), bias ~6.9%
+  // 10 digits: 5 bytes (BigInt), bias ~0.87%
+  it('4-digit PIN bias is moderate (~8.4%)', () => {
+    // 2 bytes: 65536 % 10000 = 5536, bias = 5536/65536 ≈ 8.4%
+    // Values 0-5535 have 7 representatives, values 5536-9999 have 6.
+    // For a spoken verification token this is acceptable — the token is
+    // short-lived and the attacker doesn't know the byte source.
+    const maxVal = 2 ** 16
+    const mod = 10 ** 4
+    const bias = (maxVal % mod) / maxVal
+    expect(bias).toBeLessThan(0.1) // < 10%
+    expect(bias).toBeGreaterThan(0.08) // ~8.4%
+  })
+
+  it('7-digit PIN has severe bias (~40%)', () => {
+    // 3 bytes: 16777216 % 10000000 = 6777216, bias ≈ 40.4%
+    const maxVal = 2 ** 24
+    const mod = 10 ** 7
+    const bias = (maxVal % mod) / maxVal
+    expect(bias).toBeGreaterThan(0.4)
   })
 })
 

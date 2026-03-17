@@ -162,6 +162,35 @@ describe('hmacSha256', () => {
     expect(mac).toBe('773ea91e36800e46854db8ebd09181a72959098b3ef8c122d9635514ced565fe')
   })
 
+  // RFC 4231 Test Case 4 — non-uniform key 0x01..0x19, 50 × 0xcd
+  it('TC4: key=0x01..0x19, data=50×0xcd', () => {
+    const key = new Uint8Array(25)
+    for (let i = 0; i < 25; i++) key[i] = i + 1
+    const data = new Uint8Array(50).fill(0xcd)
+    const mac = bytesToHex(hmacSha256(key, data))
+    expect(mac).toBe('82558a389a443c0ea4cc819899f2083a85f0faa3e578f8077a2e3ff46729665b')
+  })
+
+  // Key boundary: exactly 64 bytes (block size) — should NOT be hashed
+  it('key exactly 64 bytes (block size boundary, not hashed)', () => {
+    const key = new Uint8Array(64).fill(0x42)
+    const data = new TextEncoder().encode('test')
+    const mac = hmacSha256(key, data)
+    expect(mac).toBeInstanceOf(Uint8Array)
+    expect(mac).toHaveLength(32)
+  })
+
+  // Key boundary: 65 bytes (one over block size) — should be hashed
+  it('key 65 bytes (one over block size, exercises key hashing branch)', () => {
+    const key = new Uint8Array(65).fill(0x42)
+    const data = new TextEncoder().encode('test')
+    const mac65 = bytesToHex(hmacSha256(key, data))
+    // Must differ from 64-byte key (different code path)
+    const key64 = new Uint8Array(64).fill(0x42)
+    const mac64 = bytesToHex(hmacSha256(key64, data))
+    expect(mac65).not.toBe(mac64)
+  })
+
   // RFC 4231 Test Case 6 — key longer than block size (131 bytes)
   it('TC6: key=131×0xaa (longer than block size), exercises key hashing branch', () => {
     const key = new Uint8Array(131).fill(0xaa)

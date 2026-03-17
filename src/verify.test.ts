@@ -242,4 +242,41 @@ describe('encoding option', () => {
     const result = verifyToken(SECRET, CTX, COUNTER, token, undefined, { encoding })
     expect(result).toEqual({ status: 'valid' })
   })
+
+  it('verifies hex tokens case-insensitively', () => {
+    const encoding = { format: 'hex', length: 8 } as const
+    const token = deriveToken(SECRET, CTX, COUNTER, encoding)
+    const result = verifyToken(SECRET, CTX, COUNTER, token.toUpperCase(), undefined, { encoding })
+    expect(result).toEqual({ status: 'valid' })
+  })
+})
+
+// ─── Tolerance boundary clamping ────────────────────────────────────────────
+describe('tolerance boundary clamping', () => {
+  it('counter=0 with tolerance does not underflow', () => {
+    const token = deriveToken(SECRET, CTX, 0)
+    const result = verifyToken(SECRET, CTX, 0, token, undefined, { tolerance: 5 })
+    expect(result).toEqual({ status: 'valid' })
+  })
+
+  it('counter=0xFFFFFFFF with tolerance does not overflow', () => {
+    const token = deriveToken(SECRET, CTX, 0xFFFFFFFF)
+    const result = verifyToken(SECRET, CTX, 0xFFFFFFFF, token, undefined, { tolerance: 5 })
+    expect(result).toEqual({ status: 'valid' })
+  })
+})
+
+// ─── Empty and duplicate identities ─────────────────────────────────────────
+describe('identity edge cases', () => {
+  it('empty identities array behaves like no identities', () => {
+    const token = deriveToken(SECRET, CTX, COUNTER)
+    const result = verifyToken(SECRET, CTX, COUNTER, token, [])
+    expect(result).toEqual({ status: 'valid' })
+  })
+
+  it('duplicate identities produce correct result without error', () => {
+    const token = deriveToken(SECRET, CTX, COUNTER, undefined, 'alice')
+    const result = verifyToken(SECRET, CTX, COUNTER, token, ['alice', 'alice', 'bob'])
+    expect(result).toEqual({ status: 'valid', identity: 'alice' })
+  })
 })
