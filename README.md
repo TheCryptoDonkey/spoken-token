@@ -1,5 +1,8 @@
 # spoken-token
 
+[![CI](https://github.com/TheCryptoDonkey/spoken-token/actions/workflows/ci.yml/badge.svg)](https://github.com/TheCryptoDonkey/spoken-token/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/spoken-token)](https://www.npmjs.com/package/spoken-token)
+
 TOTP but you say it out loud — derive time-rotating, human-speakable verification tokens from a shared secret.
 
 ```
@@ -129,6 +132,7 @@ Each token is `HMAC-SHA256(secret, utf8(context) || counter_be32)`, truncated an
 ```bash
 npx tsx examples/rideshare.ts
 npx tsx examples/phone-auth.ts
+npx tsx examples/identity-verify.ts
 ```
 
 ---
