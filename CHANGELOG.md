@@ -1,3 +1,24 @@
+# [2.0.0](https://github.com/TheCryptoDonkey/spoken-token/compare/v1.0.4...v2.0.0) (2026-03-17)
+
+
+* feat!: eliminate PIN bias, add directional pair domain separation ([c087bb7](https://github.com/TheCryptoDonkey/spoken-token/commit/c087bb7277921f35ba8be6eadd7b82bf526bb576))
+
+
+### BREAKING CHANGES
+
+* PIN encoding and directional pair outputs change.
+
+- Replace PIN byte formula with lookup table (PIN_BYTES) that keeps
+  max per-value bias below 1% for all digit counts. Previously 7-digit
+  PINs had ~40% bias (some values 2x as likely); now all are <1%.
+- Add "pair\0" prefix to directional pair HMAC input, cryptographically
+  isolating it from identity-bound derivation. Previously
+  deriveDirectionalPair(s, "ns", ["role", ...], c) produced the same
+  token as deriveTokenBytes(s, "ns", c, "role").
+- Reject whitespace-only context strings, namespace, and roles.
+- Document identity collision risk in verifyToken JSDoc for low-entropy
+  encodings (single word + many identities).
+
 ## [1.0.4](https://github.com/TheCryptoDonkey/spoken-token/compare/v1.0.3...v1.0.4) (2026-03-17)
 
 
