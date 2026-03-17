@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { WORDLIST, WORDLIST_SIZE, getWord, indexOf } from './wordlist.js'
+import { sha256, bytesToHex } from './crypto.js'
 
 describe('wordlist', () => {
   it('has exactly 2048 entries', () => {
@@ -42,5 +43,10 @@ describe('wordlist', () => {
 
   it('indexOf returns -1 for unknown word', () => {
     expect(indexOf('xyznotaword')).toBe(-1)
+  })
+
+  it('en-v1 SHA-256 integrity hash matches protocol spec', () => {
+    const hash = bytesToHex(sha256(new TextEncoder().encode(WORDLIST.join('\n'))))
+    expect(hash).toBe('0334930ebdfbc76e81ec914515d7567ca85738a6bf3069249d97df951d44661c')
   })
 })
