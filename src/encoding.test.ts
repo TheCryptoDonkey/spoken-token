@@ -195,7 +195,6 @@ describe('encodeToken', () => {
 
   it('throws on unsupported encoding format', () => {
     const bytes = new Uint8Array(32)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect(() => encodeToken(bytes, { format: 'base64' } as any)).toThrow('Unsupported encoding format: base64')
+    expect(() => encodeToken(bytes, { format: 'base64' } as never)).toThrow('Unsupported encoding format: base64')
   })
 })
