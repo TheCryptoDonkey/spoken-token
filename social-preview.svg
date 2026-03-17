@@ -258,7 +258,7 @@
   <text x="660" y="310" font-family="'SF Mono', 'Fira Code', 'JetBrains Mono', 'Menlo', monospace" font-size="48" font-weight="bold" fill="#f8fafc">spoken-token</text>
 
   <!-- Tagline -->
-  <text x="660" y="348" font-family="'Inter', -apple-system, 'Segoe UI', sans-serif" font-size="18" fill="#94a3b8">say the word. prove you're real.</text>
+  <text x="660" y="348" font-family="'Inter', -apple-system, 'Segoe UI', sans-serif" font-size="18" fill="#94a3b8">say it out loud. prove you're real.</text>
 
   <!-- Keyword ticker -->
   <text y="622" font-family="'SF Mono', 'Fira Code', 'Menlo', monospace" font-size="12" fill="#94a3b8" opacity="0.06">
