@@ -1,3 +1,10 @@
+## [2.0.2](https://github.com/TheCryptoDonkey/spoken-token/compare/v2.0.1...v2.0.2) (2026-03-17)
+
+
+### Bug Fixes
+
+* zero sha256 intermediate buffers (padded, W) after use ([b972391](https://github.com/TheCryptoDonkey/spoken-token/commit/b972391ba2f01026ea91aff426c789d436f83a7a))
+
 ## [2.0.1](https://github.com/TheCryptoDonkey/spoken-token/compare/v2.0.0...v2.0.1) (2026-03-17)
 
 
