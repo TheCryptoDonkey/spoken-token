@@ -208,6 +208,12 @@ describe('deriveDirectionalPair equivalence', () => {
     expect(typeof pair.agent).toBe('string')
     expect(pair.caller).not.toBe(pair.agent)
   })
+
+  it('U-13: deriveDirectionalPair(SECRET_1, aviva, [caller, agent], 0) pinned values', () => {
+    const pair = deriveDirectionalPair(SECRET_1, 'aviva', ['caller', 'agent'], 0)
+    expect(pair.caller).toBe('receive')
+    expect(pair.agent).toBe('coyote')
+  })
 })
 
 // ─── deriveDirectionalPair ───────────────────────────────────────────────────

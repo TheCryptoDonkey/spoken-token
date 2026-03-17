@@ -139,4 +139,8 @@ describe('counterFromEventId', () => {
   it('produces known output for known input (golden test)', () => {
     expect(counterFromEventId('hello')).toBe(754077114)
   })
+
+  it('throws on empty string', () => {
+    expect(() => counterFromEventId('')).toThrow(RangeError)
+  })
 })

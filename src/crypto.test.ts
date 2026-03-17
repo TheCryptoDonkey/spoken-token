@@ -18,6 +18,11 @@ describe('timingSafeEqual', () => {
   it('returns true for empty arrays', () => {
     expect(timingSafeEqual(new Uint8Array([]), new Uint8Array([]))).toBe(true)
   })
+
+  it('returns false for empty vs non-empty', () => {
+    expect(timingSafeEqual(new Uint8Array([]), new Uint8Array([1, 2, 3]))).toBe(false)
+    expect(timingSafeEqual(new Uint8Array([1, 2, 3]), new Uint8Array([]))).toBe(false)
+  })
 })
 
 describe('timingSafeStringEqual', () => {
@@ -222,5 +227,14 @@ describe('bytesToBase64 / base64ToBytes', () => {
     const input = new Uint8Array(32)
     for (let i = 0; i < 32; i++) input[i] = (i * 37 + 13) % 256
     expect(base64ToBytes(bytesToBase64(input))).toEqual(input)
+  })
+
+  it('round-trips bytes containing null', () => {
+    const input = new Uint8Array([0x00, 0x01, 0x00])
+    expect(base64ToBytes(bytesToBase64(input))).toEqual(input)
+  })
+
+  it('throws on invalid base64', () => {
+    expect(() => base64ToBytes('not!valid!base64!')).toThrow()
   })
 })
