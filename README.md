@@ -8,6 +8,12 @@ npm install spoken-token
 
 Zero runtime dependencies. ESM-only. Works in Node.js and the browser.
 
+## Why spoken-token?
+
+TOTP gives you a 6-digit code on a screen — great for typing into a website, useless for saying over a phone call. Digits are hard to speak, easy to mishear, and carry no meaning.
+
+spoken-token replaces digits with words from a curated 2048-word English wordlist — no homophones, no phonetic near-collisions, 3–8 characters each. The derivation is the same (HMAC over a counter), but the encoding is optimised for the human voice.
+
 ---
 
 ## Quick start
@@ -115,6 +121,15 @@ Each token is `HMAC-SHA256(secret, utf8(context) || counter_be32)`, truncated an
 ## Used by
 
 **[canary-kit](https://github.com/TheCryptoDonkey/canary-kit)** — deepfake-proof identity verification
+
+---
+
+## Try it
+
+```bash
+npx tsx examples/rideshare.ts
+npx tsx examples/phone-auth.ts
+```
 
 ---
 
