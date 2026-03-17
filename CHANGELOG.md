@@ -1,3 +1,12 @@
+## [1.0.2](https://github.com/TheCryptoDonkey/spoken-token/compare/v1.0.1...v1.0.2) (2026-03-17)
+
+
+### Bug Fixes
+
+* disable semantic-release issue/PR comments after permission tightening ([ba09920](https://github.com/TheCryptoDonkey/spoken-token/commit/ba09920b3cc8aa3d316e60b0a076865234dd4662))
+* harden CI/CD supply chain ([8e559c6](https://github.com/TheCryptoDonkey/spoken-token/commit/8e559c696e17ed839c942801c25b039dcd1f894c))
+* harden input validation and crypto hygiene ([3b49ab1](https://github.com/TheCryptoDonkey/spoken-token/commit/3b49ab14fb6abfa93bffbdd4fcabda7a2845a037))
+
 ## [1.0.1](https://github.com/TheCryptoDonkey/spoken-token/compare/v1.0.0...v1.0.1) (2026-03-17)
 
 
