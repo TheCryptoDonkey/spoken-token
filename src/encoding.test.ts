@@ -162,6 +162,10 @@ describe('encoding input validation', () => {
   it('encodeAsHex rejects fractional length', () => {
     expect(() => encodeAsHex(new Uint8Array(32), 7.5)).toThrow('Hex length must be an integer 1–64')
   })
+
+  it('encodeAsPin rejects insufficient bytes', () => {
+    expect(() => encodeAsPin(new Uint8Array(1), 8)).toThrow('Not enough bytes')
+  })
 })
 
 describe('encodeToken', () => {

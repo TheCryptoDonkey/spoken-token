@@ -159,6 +159,35 @@ describe('tolerance bound validation', () => {
   })
 })
 
+// ─── Counter validation ────────────────────────────────────────────────────
+describe('counter validation', () => {
+  it('throws RangeError for negative counter', () => {
+    expect(() => verifyToken(SECRET, CTX, -1, 'word')).toThrow(RangeError)
+  })
+
+  it('throws RangeError for fractional counter', () => {
+    expect(() => verifyToken(SECRET, CTX, 1.5, 'word')).toThrow(RangeError)
+  })
+
+  it('throws RangeError for NaN counter', () => {
+    expect(() => verifyToken(SECRET, CTX, NaN, 'word')).toThrow(RangeError)
+  })
+
+  it('throws RangeError for counter exceeding uint32', () => {
+    expect(() => verifyToken(SECRET, CTX, 0x100000000, 'word')).toThrow(RangeError)
+  })
+
+  it('accepts counter at uint32 max boundary', () => {
+    expect(() => verifyToken(SECRET, CTX, 0xFFFFFFFF, 'word')).not.toThrow()
+  })
+
+  it('accepts counter 0 with tolerance', () => {
+    const token = deriveToken(SECRET, CTX, 0)
+    const result = verifyToken(SECRET, CTX, 0, token, undefined, { tolerance: 2 })
+    expect(result).toEqual({ status: 'valid' })
+  })
+})
+
 // ─── Identity limit ──────────────────────────────────────────────────────────
 describe('identity limit', () => {
   it('throws RangeError when identities array exceeds 100 entries', () => {

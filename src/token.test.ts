@@ -189,6 +189,27 @@ describe('deriveToken', () => {
   })
 })
 
+// ─── deriveTokenBytes null-byte context validation ──────────────────────────
+describe('deriveTokenBytes context null-byte validation', () => {
+  it('throws on context containing null bytes (public API)', () => {
+    expect(() => deriveTokenBytes(SECRET_1, 'a\0b', 0)).toThrow('context must not contain null bytes')
+  })
+
+  it('throws on context mimicking directional pair format', () => {
+    expect(() => deriveTokenBytes(SECRET_1, 'dispatch\0caller', 0)).toThrow('context must not contain null bytes')
+  })
+})
+
+// ─── deriveDirectionalPair matches expected derivation ──────────────────────
+describe('deriveDirectionalPair equivalence', () => {
+  it('directional pair still works after internal refactor', () => {
+    const pair = deriveDirectionalPair(SECRET_1, 'dispatch', ['caller', 'agent'], 0)
+    expect(typeof pair.caller).toBe('string')
+    expect(typeof pair.agent).toBe('string')
+    expect(pair.caller).not.toBe(pair.agent)
+  })
+})
+
 // ─── deriveDirectionalPair ───────────────────────────────────────────────────
 describe('deriveDirectionalPair', () => {
   it('returns an object keyed by role names', () => {
