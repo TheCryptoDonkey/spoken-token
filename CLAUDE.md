@@ -9,6 +9,7 @@ TOTP but you say it out loud. Generic spoken verification tokens from a shared s
 - `npm run test:watch` — watch mode
 - `npm run typecheck` — type-check without emitting
 - `npm run lint` — run ESLint
+- `npm run lint:fix` — run ESLint with auto-fix
 
 ## Dependencies
 
