@@ -24,7 +24,15 @@ TOTP but you say it out loud. Generic spoken verification tokens from a shared s
 - `src/counter.ts` — time-based counter derivation (`getTimeCounter`)
 - `src/crypto.ts` — pure JS SHA-256, HMAC-SHA256, hex/base64 utilities
 - `src/index.ts` — barrel re-export
-- `PROTOCOL.md` — full protocol specification (SPOKEN-DERIVE, SPOKEN-ENCODE)
+- `PROTOCOL.md` — full protocol specification v2.0 (SPOKEN-DERIVE, SPOKEN-ENCODE)
+
+## v2.0 Breaking Changes
+
+These architectural decisions are non-obvious and must not be reverted:
+
+- **PIN encoding** uses a `PIN_BYTES` lookup table (not a formula) to keep max per-value bias below 1% for all digit counts. The old `ceil(digits × 0.415)` formula had ~40% bias at 7 digits.
+- **Directional pairs** use a `"pair\0"` context prefix (`pair\0namespace\0role`) to cryptographically isolate them from identity-bound tokens (`context\0identity`).
+- **Whitespace-only** context strings, namespaces, and roles are rejected.
 
 ## Conventions
 
