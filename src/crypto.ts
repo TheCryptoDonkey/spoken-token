@@ -255,7 +255,7 @@ export function bytesToHex(bytes: Uint8Array): string {
  * @throws {RangeError} If offset is out of bounds.
  */
 export function readUint16BE(bytes: Uint8Array, offset: number): number {
-  if (!Number.isInteger(offset) || offset < 0 || offset + 1 >= bytes.length) throw new RangeError(`readUint16BE: offset ${offset} out of bounds for length ${bytes.length}`)
+  if (!Number.isInteger(offset) || offset < 0 || offset + 2 > bytes.length) throw new RangeError(`readUint16BE: offset ${offset} out of bounds for length ${bytes.length}`)
   return ((bytes[offset] << 8) | bytes[offset + 1]) >>> 0
 }
 

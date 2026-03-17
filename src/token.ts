@@ -150,6 +150,12 @@ export function deriveDirectionalPair(
   // (e.g. namespace "a:b" + role "c" vs namespace "a" + role "b:c")
   // Calls deriveTokenBytesInternal directly — the constructed context intentionally
   // contains a null byte as the protocol-defined separator.
+  //
+  // Design note: the HMAC input `utf8(namespace\0role) || counter_be32` is byte-identical
+  // to an identity-bound derivation `deriveTokenBytes(secret, namespace, counter, role)`.
+  // This is intentional — both require the same shared secret, so cross-domain equivalence
+  // does not weaken security. Consumers should use distinct namespaces/contexts to avoid
+  // accidental overlap between directional-pair and identity-bound tokens.
   return {
     [roles[0]]: encodeToken(deriveTokenBytesInternal(secret, `${namespace}\0${roles[0]}`, counter), encoding),
     [roles[1]]: encodeToken(deriveTokenBytesInternal(secret, `${namespace}\0${roles[1]}`, counter), encoding),

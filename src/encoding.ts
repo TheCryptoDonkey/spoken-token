@@ -41,6 +41,14 @@ export function encodeAsWords(
  * Uses the first ceil(digits * 0.415) bytes, interpreted as a big-endian
  * integer, reduced modulo 10^digits.
  *
+ * **Bias note:** The byte-count formula allocates `ceil(digits × 0.415)` bytes.
+ * Modular reduction introduces bias where `2^(bytes×8) mod 10^digits ≠ 0`:
+ * 4 digits (~8.4%), 5 digits (~0.46%), 6 digits (~4.6%),
+ * **7 digits (~40% — severe)**, 8 digits (~2.2%), 10 digits (~0.87%).
+ * For spoken verification tokens (short-lived, attacker lacks byte source),
+ * this is generally acceptable. If uniform distribution is critical,
+ * use word encoding instead.
+ *
  * @param bytes - Raw bytes to encode (must be non-empty).
  * @param digits - Number of PIN digits to produce (integer 1-10, default: 4).
  * @returns Zero-padded numeric string of the specified length.
