@@ -79,6 +79,27 @@ Derive an encoded token string.
 | `encoding` | `TokenEncoding` | Output format (default: single word) |
 | `identity` | `string?` | Optional per-member identifier |
 
+### Identity binding with nsec-tree
+
+When using [nsec-tree](https://github.com/forgesworn/nsec-tree) for deterministic
+sub-identity derivation, a persona's npub makes a natural identity parameter —
+different personas produce different tokens from the same group secret:
+
+```typescript
+import { deriveToken } from 'spoken-token'
+import { fromMnemonic } from 'nsec-tree/mnemonic'
+import { derivePersona } from 'nsec-tree/persona'
+
+const root = fromMnemonic(mnemonic)
+const personal = derivePersona(root, 'personal', 0)
+const bitcoiner = derivePersona(root, 'bitcoiner', 0)
+
+// Same group secret, same counter — different persona = different token
+const tokenA = deriveToken(groupSecret, 'canary:verify', counter, 'words', personal.identity.npub)
+const tokenB = deriveToken(groupSecret, 'canary:verify', counter, 'words', bitcoiner.identity.npub)
+// tokenA !== tokenB — persona isolation
+```
+
 ### `verifyToken(secret, context, counter, input, identities?, options?)`
 
 Verify a spoken or entered token. Returns `{ status: 'valid' | 'invalid', identity?: string }`.
