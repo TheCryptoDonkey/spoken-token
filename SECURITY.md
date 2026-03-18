@@ -11,7 +11,7 @@
 
 If you discover a security vulnerability in spoken-token, please report it responsibly.
 
-**Email:** security@thecryptodonkey.com
+**Email:** security@forgesworn.dev
 
 Please include:
 - Description of the vulnerability

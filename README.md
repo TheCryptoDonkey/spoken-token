@@ -1,6 +1,6 @@
 # spoken-token
 
-[![CI](https://github.com/TheCryptoDonkey/spoken-token/actions/workflows/ci.yml/badge.svg)](https://github.com/TheCryptoDonkey/spoken-token/actions/workflows/ci.yml)
+[![CI](https://github.com/forgesworn/spoken-token/actions/workflows/ci.yml/badge.svg)](https://github.com/forgesworn/spoken-token/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/spoken-token)](https://www.npmjs.com/package/spoken-token)
 
 TOTP but you say it out loud — derive time-rotating, human-speakable verification tokens from a shared secret.
@@ -123,7 +123,7 @@ Each token is `HMAC-SHA256(secret, utf8(context) || counter_be32)`, truncated an
 
 ## Used by
 
-**[canary-kit](https://github.com/TheCryptoDonkey/canary-kit)** — deepfake-proof identity verification
+**[canary-kit](https://github.com/forgesworn/canary-kit)** — deepfake-proof identity verification
 
 ---
 

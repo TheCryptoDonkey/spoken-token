@@ -49,6 +49,6 @@ Encoding options: `{ format: 'words', count: 1 }` (default), `{ format: 'pin', d
 
 ## Optional
 
-- [README](https://github.com/TheCryptoDonkey/spoken-token/blob/main/README.md): full API reference with examples
-- [PROTOCOL.md](https://github.com/TheCryptoDonkey/spoken-token/blob/main/PROTOCOL.md): formal protocol specification
-- [canary-kit](https://github.com/TheCryptoDonkey/canary-kit): extends spoken-token with duress signalling, liveness monitoring, and Nostr transport
+- [README](https://github.com/forgesworn/spoken-token/blob/main/README.md): full API reference with examples
+- [PROTOCOL.md](https://github.com/forgesworn/spoken-token/blob/main/PROTOCOL.md): formal protocol specification
+- [canary-kit](https://github.com/forgesworn/canary-kit): extends spoken-token with duress signalling, liveness monitoring, and Nostr transport

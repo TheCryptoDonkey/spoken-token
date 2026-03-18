@@ -3,7 +3,7 @@
 ## Setup
 
 ```bash
-git clone https://github.com/TheCryptoDonkey/spoken-token.git
+git clone https://github.com/forgesworn/spoken-token.git
 cd spoken-token
 npm install
 ```

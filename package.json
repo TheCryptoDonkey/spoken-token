@@ -43,7 +43,7 @@
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix"
   },
-  "homepage": "https://github.com/TheCryptoDonkey/spoken-token",
+  "homepage": "https://github.com/forgesworn/spoken-token",
   "keywords": [
     "totp",
     "otp",
@@ -69,11 +69,11 @@
     "wordlist",
     "typescript"
   ],
-  "author": "TheCryptoDonkey",
+  "author": "forgesworn",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/TheCryptoDonkey/spoken-token.git"
+    "url": "https://github.com/forgesworn/spoken-token.git"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

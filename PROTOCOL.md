@@ -189,7 +189,7 @@ The canonical English wordlist is **en-v1**, distributed with the reference
 implementation as a newline-delimited text file (`src/wordlists/en-v1.txt`) and
 embedded in the source module. The canonical source is the `spoken-token` npm
 package and the GitHub repository at
-`https://github.com/TheCryptoDonkey/spoken-token`.
+`https://github.com/forgesworn/spoken-token`.
 
 **Integrity check:** The SHA-256 hash of the en-v1 wordlist (words joined by `\n`,
 no trailing newline) is:
@@ -364,7 +364,7 @@ The canonical implementation is the `spoken-token` npm package:
 npm install spoken-token
 ```
 
-Source: https://github.com/TheCryptoDonkey/spoken-token
+Source: https://github.com/forgesworn/spoken-token
 
 ## Extensions
 
