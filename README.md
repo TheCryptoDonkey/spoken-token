@@ -1,5 +1,7 @@
 # spoken-token
 
+**Nostr:** [`npub1mgvlrnf5hm9yf0n5mf9nqmvarhvxkc6remu5ec3vf8r0txqkuk7su0e7q2`](https://njump.me/npub1mgvlrnf5hm9yf0n5mf9nqmvarhvxkc6remu5ec3vf8r0txqkuk7su0e7q2)
+
 [![CI](https://github.com/forgesworn/spoken-token/actions/workflows/ci.yml/badge.svg)](https://github.com/forgesworn/spoken-token/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/spoken-token)](https://www.npmjs.com/package/spoken-token)
 
