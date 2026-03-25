@@ -1,0 +1,418 @@
+# spoken-token
+
+> Verifying someone's identity over a phone call, at a door, or during a handoff requires something you can say out loud — not a 6-digit code on a screen. spoken-token derives time-rotating, human-speakable verification tokens from a shared secret. Like TOTP, but optimised for the human voice.
+
+spoken-token is a zero-dependency TypeScript library for developers building identity verification into rideshare apps, phone auth systems, courier handoffs, or any scenario where two parties need to confirm each other verbally. Both sides derive the same word (or phrase, PIN, hex code) from a shared secret without transmitting it.
+
+The 2048-word English wordlist (`en-v1`) is curated for spoken clarity — no homophones, no phonetic near-collisions, 3–8 characters each.
+
+Works in Node.js and the browser. ESM-only. Zero runtime dependencies.
+
+## Install
+
+```
+npm install spoken-token
+```
+
+---
+
+## Core protocol
+
+Token derivation formula:
+
+```
+Without identity: HMAC-SHA256(secret, utf8(context) || counter_be32)
+With identity:    HMAC-SHA256(secret, utf8(context) || 0x00 || utf8(identity) || counter_be32)
+```
+
+The 32-byte digest is then encoded as words, a PIN, or hex. The null-byte separator in the identity form prevents concatenation ambiguity.
+
+---
+
+## Full API Reference
+
+### `deriveToken(secret, context, counter, encoding?, identity?): string`
+
+Derive an encoded token string from a shared secret.
+
+```typescript
+import { deriveToken, getCounter } from 'spoken-token'
+
+const counter = getCounter(Date.now() / 1000)  // rotates every 7 days
+const word = deriveToken(sharedSecret, 'rideshare:pickup', counter)
+// → 'carbon'
+
+// With explicit encoding
+const pin = deriveToken(sharedSecret, 'door:entry', counter, { format: 'pin', digits: 6 })
+// → '047821'
+
+const twoWords = deriveToken(sharedSecret, 'courier:handoff', counter, { format: 'words', count: 2 })
+// → 'carbon timber'
+
+const hex = deriveToken(sharedSecret, 'debug', counter, { format: 'hex', length: 8 })
+// → 'a3f2e1b0'
+
+// Per-member token (different word for each identity, same context)
+const memberToken = deriveToken(sharedSecret, 'meeting:entry', counter, undefined, 'alice@example.com')
+// → 'sunset'
+```
+
+Parameters:
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `secret` | `Uint8Array \| string` | Shared secret (hex string or bytes, minimum 16 bytes) |
+| `context` | `string` | Domain-separation string — must not contain null bytes |
+| `counter` | `number` | Time-based or usage counter (uint32, 0–4294967295) |
+| `encoding` | `TokenEncoding?` | Output format (default: `{ format: 'words', count: 1 }`) |
+| `identity` | `string?` | Optional member identifier for per-member tokens |
+
+Throws `RangeError` if secret is too short or counter is out of range. Throws `Error` if context contains null bytes.
+
+---
+
+### `deriveTokenBytes(secret, context, counter, identity?): Uint8Array`
+
+Derive raw 32-byte HMAC-SHA256 output without encoding. Useful when you want to apply your own encoding or use the bytes directly.
+
+```typescript
+import { deriveTokenBytes } from 'spoken-token'
+
+const bytes = deriveTokenBytes(sharedSecret, 'my-context', counter)
+// → Uint8Array(32) — raw HMAC-SHA256 output
+```
+
+---
+
+### `deriveDirectionalPair(secret, namespace, roles, counter, encoding?): DirectionalPair`
+
+Derive two distinct tokens from one secret — one per role. Prevents the "echo problem" where one party could parrot the other's token. Each role uses context `pair\0${namespace}\0${role}` internally, providing cryptographic domain separation from identity-bound tokens.
+
+```typescript
+import { deriveDirectionalPair, getCounter } from 'spoken-token'
+
+const counter = getCounter(Date.now() / 1000, 30)  // 30-second rotation
+
+const tokens = deriveDirectionalPair(sharedSecret, 'support-call', ['caller', 'agent'], counter)
+// tokens.caller → 'timber'
+// tokens.agent  → 'canyon'
+// Neither token can be derived from the other without the shared secret.
+```
+
+Parameters:
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `secret` | `Uint8Array \| string` | Shared secret |
+| `namespace` | `string` | Namespace prefix (e.g. `'dispatch'`) — must not contain null bytes |
+| `roles` | `[string, string]` | Exactly two distinct, non-empty role names |
+| `counter` | `number` | Current counter value |
+| `encoding` | `TokenEncoding?` | Output format (default: single word) |
+
+Returns `{ [roleName]: tokenString }` — an object keyed by role name.
+
+Throws if namespace is empty, roles are identical, or either role contains null bytes.
+
+---
+
+### `verifyToken(secret, context, counter, input, identities?, options?): VerifyResult`
+
+Verify a spoken or entered token against a shared secret. Uses constant-time comparison to prevent timing side-channels.
+
+```typescript
+import { verifyToken, getCounter } from 'spoken-token'
+
+const counter = getCounter(Date.now() / 1000)
+
+// Simple group token verification
+const result = verifyToken(sharedSecret, 'courier:handoff', counter, 'carbon')
+// → { status: 'valid' }  or  { status: 'invalid' }
+
+// With clock-skew tolerance
+const result = verifyToken(sharedSecret, 'courier:handoff', counter, spokenWord,
+  undefined, { tolerance: 1 })
+// Accepts tokens from counter-1, counter, and counter+1
+
+// With per-identity matching
+const result = verifyToken(sharedSecret, 'meeting:entry', counter, spokenWord,
+  ['alice@example.com', 'bob@example.com'])
+// → { status: 'valid', identity: 'alice@example.com' }  (if Alice's token was spoken)
+
+// With custom encoding
+const result = verifyToken(sharedSecret, 'door:entry', counter, '047821',
+  undefined, { encoding: { format: 'pin', digits: 6 } })
+```
+
+Parameters:
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `secret` | `Uint8Array \| string` | Shared secret |
+| `context` | `string` | Context string |
+| `counter` | `number` | Current time-based counter |
+| `input` | `string` | The spoken or entered token to verify |
+| `identities` | `string[]?` | Optional array of member identities (max 100) |
+| `options` | `VerifyOptions?` | Optional encoding and tolerance settings |
+
+`VerifyOptions`:
+
+```typescript
+interface VerifyOptions {
+  encoding?: TokenEncoding   // Output encoding (default: single word)
+  tolerance?: number         // Counter tolerance window ±N (default: 0, max: 10)
+}
+```
+
+`VerifyResult`:
+
+```typescript
+interface VerifyResult {
+  status: 'valid' | 'invalid'
+  identity?: string  // The matching identity (when identities array was provided)
+}
+```
+
+Verification priority order:
+1. Per-identity tokens at exact counter (priority 3)
+2. Per-identity tokens within tolerance window (priority 2)
+3. Group-wide token (no identity) within tolerance window (priority 1)
+
+Throws `RangeError` if tolerance exceeds `MAX_TOLERANCE` (10) or identities array exceeds 100 entries.
+
+---
+
+### `getCounter(timestampSec, rotationIntervalSec?): number`
+
+Derive the current counter from a Unix timestamp. Both parties compute the same value independently.
+
+```typescript
+import { getCounter, DEFAULT_ROTATION_INTERVAL } from 'spoken-token'
+
+// Default: 7-day rotation interval
+const counter = getCounter(Date.now() / 1000)
+// → integer that changes every 7 days
+
+// 30-second rotation (TOTP-like)
+const counter30s = getCounter(Date.now() / 1000, 30)
+
+// 1-hour rotation
+const counterHourly = getCounter(Date.now() / 1000, 3600)
+
+// DEFAULT_ROTATION_INTERVAL === 604800  (7 days in seconds)
+```
+
+Formula: `floor(timestampSec / rotationIntervalSec)`
+
+Throws `RangeError` if `timestampSec` is negative/non-finite, `rotationIntervalSec` is non-positive, or the result exceeds uint32 range.
+
+---
+
+### `counterFromEventId(eventId): number`
+
+Derive a deterministic counter from an event identifier (e.g. a Nostr event ID or task ID). Uses SHA-256 truncated to 32 bits.
+
+```typescript
+import { counterFromEventId } from 'spoken-token'
+
+const counter = counterFromEventId('abc123-event-id')
+// → deterministic uint32 — same input always produces the same counter
+
+// Useful for event-scoped tokens that don't rotate by time
+const token = deriveToken(sharedSecret, 'event:verification', counterFromEventId(eventId))
+```
+
+---
+
+### `counterToBytes(counter): Uint8Array`
+
+Serialise a counter to an 8-byte big-endian Uint8Array (same encoding as TOTP/RFC 6238).
+
+```typescript
+import { counterToBytes } from 'spoken-token'
+
+counterToBytes(42)  // → Uint8Array(8) [0,0,0,0,0,0,0,42]
+```
+
+---
+
+## Encoding types
+
+```typescript
+type TokenEncoding =
+  | { format: 'words'; count?: number; wordlist?: readonly string[] }
+  | { format: 'pin'; digits?: number }
+  | { format: 'hex'; length?: number }
+```
+
+| Format | Default | Range | Output example |
+|--------|---------|-------|----------------|
+| `words` | count: 1 | count: 1–16 | `'carbon'` / `'carbon timber'` |
+| `pin` | digits: 4 | digits: 1–10 | `'0478'` / `'047821'` |
+| `hex` | length: 8 | length: 1–64 | `'a3f2e1b0'` |
+
+The default encoding is `{ format: 'words', count: 1 }`.
+
+PIN encoding uses a lookup table (`PIN_BYTES`) to keep modular bias below 1% for all digit counts.
+
+Custom wordlists must contain exactly 2048 entries.
+
+---
+
+## Low-level encoding functions
+
+### `encodeAsWords(bytes, count?, wordlist?): string[]`
+
+```typescript
+import { encodeAsWords } from 'spoken-token'
+
+encodeAsWords(someBytes, 2)  // → ['carbon', 'timber']
+```
+
+### `encodeAsPin(bytes, digits?): string`
+
+```typescript
+import { encodeAsPin } from 'spoken-token'
+
+encodeAsPin(someBytes, 6)  // → '047821'
+```
+
+### `encodeAsHex(bytes, length?): string`
+
+```typescript
+import { encodeAsHex } from 'spoken-token'
+
+encodeAsHex(someBytes, 8)  // → 'a3f2e1b0'
+```
+
+### `encodeToken(bytes, encoding?): string`
+
+Encode using the `TokenEncoding` union type. Words are space-joined.
+
+---
+
+## Wordlist functions
+
+### `WORDLIST: readonly string[]`
+
+The full 2048-word `en-v1` English wordlist. Curated for spoken clarity.
+
+### `WORDLIST_SIZE: number`
+
+`2048`
+
+### `getWord(index): string`
+
+Get a word by index (0–2047).
+
+### `indexOf(word): number`
+
+Find the index of a word (-1 if not in the wordlist).
+
+---
+
+## Crypto primitives
+
+The library exports its internal pure-JS cryptographic utilities for use without adding another dependency:
+
+### `sha256(data: Uint8Array): Uint8Array`
+### `hmacSha256(key: Uint8Array, data: Uint8Array): Uint8Array`
+### `randomSeed(byteLength: number): Uint8Array`
+### `hexToBytes(hex: string): Uint8Array`
+### `bytesToHex(bytes: Uint8Array): string`
+### `readUint16BE(bytes: Uint8Array, offset: number): number`
+### `concatBytes(...arrays: Uint8Array[]): Uint8Array`
+### `bytesToBase64(bytes: Uint8Array): string`
+### `base64ToBytes(base64: string): Uint8Array`
+### `timingSafeEqual(a: Uint8Array, b: Uint8Array): boolean`
+### `timingSafeStringEqual(a: string, b: string): boolean`
+
+All implementations are pure JavaScript (no `node:crypto`), working in both Node.js and browsers.
+
+---
+
+## Constants
+
+```typescript
+MAX_TOLERANCE = 10          // Maximum allowed tolerance value for verifyToken
+MAX_COUNTER_OFFSET = 100    // Maximum allowed usage counter offset above time-based counter
+DEFAULT_ROTATION_INTERVAL = 604_800  // 7 days in seconds
+DEFAULT_ENCODING = { format: 'words', count: 1 }
+```
+
+---
+
+## Common patterns
+
+### Rideshare pickup
+
+```typescript
+import { deriveToken, verifyToken, getCounter } from 'spoken-token'
+
+// App generates shared secret and stores it server-side, keyed by ride ID
+const sharedSecret = randomSeed(32)
+const counter = getCounter(Date.now() / 1000)  // 7-day window
+
+// Rider's phone shows:
+const riderWord = deriveToken(sharedSecret, 'rideshare:rider', counter)
+
+// Driver's app verifies what rider says:
+const result = verifyToken(sharedSecret, 'rideshare:rider', counter, spokenWord,
+  undefined, { tolerance: 1 })
+// tolerance: 1 absorbs counter rotation happening during the ride
+```
+
+### Phone call authentication
+
+```typescript
+import { deriveDirectionalPair, getCounter } from 'spoken-token'
+
+// 30-second rotation to match call duration
+const counter = getCounter(Date.now() / 1000, 30)
+
+const { caller, agent } = deriveDirectionalPair(
+  sharedSecret, 'support-call', ['caller', 'agent'], counter
+)
+// IVR says to caller: "Your verification word is: timber"
+// Agent's system shows: "Caller should say: timber. Your response word is: canyon"
+// Neither party can derive the other's word.
+```
+
+### Group entry with per-member tokens
+
+```typescript
+import { deriveToken, verifyToken, getCounter } from 'spoken-token'
+
+const members = ['alice@example.com', 'bob@example.com', 'carol@example.com']
+const counter = getCounter(Date.now() / 1000)
+
+// Each member derives their personal token on their device:
+const aliceToken = deriveToken(sharedSecret, 'event:2024-conf', counter, undefined, 'alice@example.com')
+
+// Door system verifies whoever shows up:
+const result = verifyToken(sharedSecret, 'event:2024-conf', counter,
+  spokenWord, members, { tolerance: 1, encoding: { format: 'words', count: 2 } })
+// → { status: 'valid', identity: 'alice@example.com' }
+```
+
+---
+
+## Relationship to canary-kit
+
+`spoken-token` is the generic core. [`canary-kit`](https://www.npmjs.com/package/canary-kit) extends it with:
+
+- Duress signalling (coercion-resistant "I'm under threat" token)
+- Dead man's switch liveness monitoring
+- Group management
+- Nostr transport (NIP-17 encrypted DMs, location beacons)
+- Threat-profile presets
+
+Use `spoken-token` when you need the primitives without the CANARY protocol overhead.
+
+---
+
+## Links
+
+- [npm](https://www.npmjs.com/package/spoken-token)
+- [GitHub](https://github.com/forgesworn/spoken-token)
+- [PROTOCOL.md](https://github.com/forgesworn/spoken-token/blob/main/PROTOCOL.md) — formal specification (SPOKEN-DERIVE, SPOKEN-ENCODE)
+- [canary-kit](https://www.npmjs.com/package/canary-kit) — extends spoken-token with duress signalling, liveness monitoring, and Nostr transport
